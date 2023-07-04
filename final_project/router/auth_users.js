@@ -45,39 +45,39 @@ regd_users.post("/login", (req, res) => {
 });
 
 
-
 // Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
 
-  const bookISBN = req.params.isbn;
   const userReview = req.body.userReview;
-  const loggedInUserName = req.session.authorization.userName;
-  const foundBookReview = books[bookISBN];
+  let loggedInUserName = req.session.authorization.userName;
+  const bookISBN = req.params.isbn;
+  const foundBook = books[bookISBN];
 
-  if(!foundBookReview) {
+  if(!foundBook) {
     return res.status(404).json("No book with that ISBN found")
   }
 
-  if (!(books[bookISBN].reviews.reviwer === loggedInUserName)) {
-    console.log("Unique review for this book by: " + loggedInUserName)
-    books[bookISBN].reviews = { "reviwer": loggedInUserName, "review": userReview }; //Need to fix this. Code is overwritting all reviews
-  } else {
-    console.log("Updating your review to: " + userReview);
-    books[bookISBN].reviews.review = userReview;
-  }
+  if (!(books[bookISBN].reviews[loggedInUserName] === loggedInUserName)) {
+    books[bookISBN].reviews[loggedInUserName] = userReview;
+    return res.status(300).json(books[bookISBN]);
+  } 
 
-  return res.status(300).json(books[bookISBN].reviews);
 });
 
+
 regd_users.delete("/auth/review/:isbn", (req, res) => { 
+  const bookISBN = req.params.isbn; //Getting the books ISBN from the req params
+  const loggedInUserName = req.session.authorization.userName; // Getting the username from the current session 
 
-  const bookISBN = req.params.isbn;
-  const loggedInUserName = req.session.authorization.userName;
-
-  //Code needs to find the review that matches the username and delete just that review
-  // You may want to change the way reviews are stored to an array
-
-
+  if(!books[bookISBN]) {
+    return res.status(404).json("No book with that ISBN found");
+  }
+  // const foundBookReviews = books[bookISBN].reviews;
+  if(books[bookISBN].reviews.hasOwnProperty(loggedInUserName)) {
+    delete books[bookISBN].reviews[loggedInUserName];
+    return res.status(300).json("Deleted the review");
+  }
+  return res.status(300).json(books[bookISBN]);
 });
 
 
